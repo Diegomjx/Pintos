@@ -1,9 +1,15 @@
 #ifndef THREADS_SYNCH_H
 #define THREADS_SYNCH_H
 
-
 #include <list.h>
 #include <stdbool.h>
+
+struct donation 
+  {
+    int priority;
+    struct lock *lock;
+    struct list_elem elem;
+  };
 
 /* A counting semaphore. */
 struct semaphore 
@@ -21,9 +27,15 @@ void sema_self_test (void);
 /* Lock. */
 struct lock 
   {
+    int id;
     struct thread *holder;      /* Thread holding lock (for debugging). */
     struct semaphore semaphore; /* Binary semaphore controlling access. */
+    struct donation *donated;
+    struct list_elem elem;
   };
+
+struct list_elem *find_lock (struct list *donations, struct lock *lock);
+int print_donos(struct list *donations);
 
 void lock_init (struct lock *);
 void lock_acquire (struct lock *);
@@ -49,4 +61,7 @@ void cond_broadcast (struct condition *, struct lock *);
    reference guide for more information.*/
 #define barrier() asm volatile ("" : : : "memory")
 
+
+//void donate_priority(struct thread *donor, struct lock *lock);
+void return_priority(struct lock *lock);
 #endif /* threads/synch.h */
