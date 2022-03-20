@@ -3,11 +3,10 @@
 #include <inttypes.h>
 #include <round.h>
 #include <stdio.h>
-#include "devices/pit.h" 
+#include "devices/pit.h"
 #include "threads/interrupt.h"
 #include "threads/synch.h"
 #include "threads/thread.h"
-#include "threads/fixed-point.h"
   
 /* See [8254] for hardware details of the 8254 timer chip. */
 
@@ -61,7 +60,7 @@ timer_calibrate (void)
   /* Refine the next 8 bits of loops_per_tick. */
   high_bit = loops_per_tick;
   for (test_bit = high_bit >> 1; test_bit != high_bit >> 10; test_bit >>= 1)
-    if (!too_many_loops (high_bit | test_bit))
+    if (!too_many_loops (loops_per_tick | test_bit))
       loops_per_tick |= test_bit;
 
   printf ("%'"PRIu64" loops/s.\n", (uint64_t) loops_per_tick * TIMER_FREQ);
@@ -90,8 +89,11 @@ timer_elapsed (int64_t then)
 void
 timer_sleep (int64_t ticks) 
 {
+  int64_t start = timer_ticks ();
+
   ASSERT (intr_get_level () == INTR_ON);
-  insert_in_waiting_list(ticks);
+  while (timer_elapsed (start) < ticks) 
+    thread_yield ();
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
@@ -170,27 +172,6 @@ timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
   thread_tick ();
-  remover_thread_durmiente(ticks);
-
-  // si el status del thread esta en running, entonces le suma un tick al recent_cpu
-  // si es
-  if (thread_mlfqs){
-    struct thread *cur;
-    cur = thread_current ();
-      if (cur->status == THREAD_RUNNING)
-        {
-          cur->recent_cpu = ADD_FP_INT (cur->recent_cpu, 1);
-        }
-      if (ticks % TIMER_FREQ == 0)    //el recent_cpu se tiene que calcular justo en este momento
-        {
-          calculate_load_avg ();      
-          all_threads_recent_cpu ();
-        }
-      if (ticks % 4 == 0)
-        {
-          all_threads_priority ();    // It is also recalculated once every fourth clock tick, for every thread
-        }
-  }
 }
 
 /* Returns true if LOOPS iterations waits for more than one timer
