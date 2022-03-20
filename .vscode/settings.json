@@ -1,0 +1,13 @@
+{
+  "C_Cpp.errorSquiggles": "Disabled",
+  "files.associations": {
+    "*.rmd": "markdown",
+    "syscall.h": "c",
+    "*.inc": "c",
+    "debug.h": "c",
+    "string.h": "c",
+    "features.h": "c",
+    "stddef.h": "c",
+    "thread.h": "c"
+  }
+}
